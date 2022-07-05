@@ -6,6 +6,7 @@ import cv2
 import numpy
 import requests
 import os
+import itertools
 from PIL import Image
 from pdf2image import convert_from_path
 from bounding_box import bounding_box as bb
@@ -39,14 +40,14 @@ def visualise_ocr(data, original_image, language, process_type):
 
 def visualise_form(data, original_image, language):
     extracted_data  =  data['pages'][0]['extractedInformation']
-    colours = ['navy', 'blue', 'aqua', 'teal', 'olive', 'green', 'lime', 'yellow', 'orange', 'red', 'maroon', 'fuchsia', 'purple', 'black', 'gray', 'silver']
+    colours = itertools.cycle(['navy', 'blue', 'aqua', 'teal', 'olive', 'green', 'lime', 'yellow', 'orange', 'red', 'maroon', 'fuchsia', 'purple', 'black', 'gray', 'silver'])
     vis_image = cv2.cvtColor(numpy.array(original_image.convert("RGB")), cv2.COLOR_BGR2RGB)
-    for index, pair in enumerate(extracted_data):
-        colour = colours[index]
+    for pair, colour in zip(extracted_data, colours):
         coords = pair['key']['bounding_box']
         bb.add(vis_image, coords[0], coords[1], coords[2], coords[3], 'key', colour)
-        coords = pair['value']['bounding_box']
-        bb.add(vis_image, coords[0], coords[1], coords[2], coords[3], 'value', colour)
+        if pair['value'] is not None:
+            coords = pair['value']['bounding_box']
+            bb.add(vis_image, coords[0], coords[1], coords[2], coords[3], 'value', colour)
     return vis_image
 
 def visualise_preset(data, original_image, language):
