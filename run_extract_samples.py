@@ -2,11 +2,14 @@ import argparse
 import json
 import mimetypes
 import os
+import cv2
+import numpy
 import requests
-
 import os
+import itertools
 from PIL import Image
 from pdf2image import convert_from_path
+from bounding_box import bounding_box as bb
 
 
 OUTPUT_DIR = 'outputs'
@@ -26,11 +29,34 @@ HOSTS = {
 }
 
 
-def visualise_ocr(data, original_image, language):
+def visualise_ocr(data, original_image, language, process_type):
     """
     Visualise DEEPREAD Extract response in side-by-side image comparison.
     """
-    pass
+    if process_type == 'form':
+        return visualise_form(data, original_image, language)
+    else:
+        return visualise_preset(data, original_image, language)
+
+def visualise_form(data, original_image, language):
+    extracted_data  =  data['pages'][0]['extractedInformation']
+    colours = itertools.cycle(['navy', 'blue', 'aqua', 'teal', 'olive', 'green', 'lime', 'yellow', 'orange', 'red', 'maroon', 'fuchsia', 'purple', 'black', 'gray', 'silver'])
+    vis_image = cv2.cvtColor(numpy.array(original_image.convert("RGB")), cv2.COLOR_BGR2RGB)
+    for pair, colour in zip(extracted_data, colours):
+        coords = pair['key']['bounding_box']
+        bb.add(vis_image, coords[0], coords[1], coords[2], coords[3], 'key', colour)
+        if pair['value'] is not None:
+            coords = pair['value']['bounding_box']
+            bb.add(vis_image, coords[0], coords[1], coords[2], coords[3], 'value', colour)
+    return vis_image
+
+def visualise_preset(data, original_image, language):
+    extracted_data  =  data['pages'][0]['extractedInformation']
+    vis_image = cv2.cvtColor(numpy.array(original_image.convert("RGB")), cv2.COLOR_BGR2RGB)
+    for key in extracted_data['fields'].keys():
+        coords = extracted_data['fields'][key]['bounding_box']
+        bb.add(vis_image, coords[0], coords[1], coords[2], coords[3], key, 'red')
+    return vis_image
 
 
 def process_file(filename, language, key, process_type, visualise):
@@ -83,8 +109,8 @@ def process_file(filename, language, key, process_type, visualise):
             pages[0].save(new_filename, 'JPEG')
             filename = new_filename
         with Image.open(filename) as original_image:
-            output_image = visualise_ocr(data, original_image, language)
-            # output_image.save(os.path.join(output_path, os.path.basename(filename)))
+            output_image = visualise_ocr(data, original_image, language, process_type)
+            cv2.imwrite(os.path.join(output_path, os.path.basename(filename)), output_image)
 
 
 def find_language(filename, language=None):
