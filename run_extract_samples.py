@@ -110,7 +110,7 @@ def process_file(filename, language, key, process_type, visualise):
             filename = new_filename
         with Image.open(filename) as original_image:
             output_image = visualise_ocr(data, original_image, language, process_type)
-            cv2.imwrite(os.path.join(output_path, os.path.basename(filename))+'.png', output_image)
+            cv2.imwrite(os.path.join(output_path, os.path.basename(filename)), output_image)
 
 
 def find_language(filename, language=None):
