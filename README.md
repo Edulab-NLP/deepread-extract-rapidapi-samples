@@ -52,7 +52,7 @@ To process all images in `samples/` folder.
 `python run_extract_samples.py -k <X-RapidAPI-Key> --all`
 
 To process a specific image in japanese (notice how process-type argument is not allowed):
-`python run_extract_samples.py -k <X-RapidAPI-Key> -f samples/invoice/invoice-template-ie-neat-750px.png -l ja`
+`python run_extract_samples.py -k <X-RapidAPI-Key> -f samples/invoice/invoice-sample-ja.png -l ja`
 
 Samples
 ----------
